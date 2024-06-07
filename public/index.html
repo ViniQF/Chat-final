@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <title>Chat-vini</title>
+</head>
+<body>
+
+    <div id="container">
+        <div id="conversas">
+            <h2>Conversas</h2> 
+            <ul>
+                <li><img src="img/images.jpg" alt="" class="profile-img">Pai</li>
+               <li> <img src="img/mae.jpg" alt="" class="profile-img">Mãe</li>
+                <li><img src="img/familia.jpg" alt="" class="profile-img">Familia</li>
+                <li><img src="img/amigos.jpg" alt="" class="profile-img">Amigos</li>
+            </ul>
+    </div>
+
+        <div id="caixa">
+            <form> 
+                <ul id="mensagens"></ul>
+                <div id="input-container">
+                    <input type="text" id="nome" placeholder="Seu nome de Usuario: ">
+                    <input type="text" id="mensagem" placeholder="Sua mensagem">
+                    <button type="submit"><img src="img/msg.png" alt="Enviar mensagem"></button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+        const nomeInput = document.getElementById('nome');
+        const mensagemInput = document.getElementById('mensagem');
+        const mensagens = document.getElementById('mensagens');
+        const cores = ['#ff7f0e', '#1f77b4', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf'];
+        const corNomes = {};
+        let nomeEnviado = false;
+
+        document.querySelector('form').addEventListener('submit', event => {
+            event.preventDefault();
+            const nome = nomeInput.value;
+            const mensagem = mensagemInput.value;
+            
+            if (nome.trim() && mensagem.trim()) {
+                socket.emit('chat message', { nome, mensagem });
+                mensagemInput.value = '';
+
+                if (!nomeEnviado) {
+                    nomeInput.disabled = true;
+                    nomeEnviado = true;
+                }
+            }
+        });
+
+        socket.on('chat message', dados => {
+            const lista = document.createElement('li');
+            const nomeUsuario = document.createElement('span');
+            const mensagemUsuario = document.createElement('span');
+
+            nomeUsuario.textContent = `${dados.nome}: `;
+            mensagemUsuario.textContent = dados.mensagem;
+
+            if (!corNomes[dados.nome]) {
+                corNomes[dados.nome] = cores[Math.floor(Math.random() * cores.length)];
+            }
+
+            nomeUsuario.style.color = corNomes[dados.nome];
+
+            lista.appendChild(nomeUsuario);
+            lista.appendChild(mensagemUsuario);
+
+            lista.classList.add('mensagem-container');
+
+            if (dados.nome === nomeInput.value) {
+                lista.classList.add('sent-box');
+            } else {
+                lista.classList.add('received-box');
+            }
+
+            mensagens.appendChild(lista);
+
+            mensagens.scrollTop = mensagens.scrollHeight;
+        });
+    </script>
+</body>
+</html>
